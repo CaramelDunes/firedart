@@ -7,14 +7,14 @@ import 'package:http/http.dart' as http;
 
 class FirebaseAuth {
   /* Singleton interface */
-  static FirebaseAuth _instance;
+  static FirebaseAuth? _instance;
 
   static FirebaseAuth initialize(String apiKey, TokenStore tokenStore) {
     if (_instance != null) {
       throw Exception('FirebaseAuth instance was already initialized');
     }
     _instance = FirebaseAuth(apiKey, tokenStore);
-    return _instance;
+    return _instance!;
   }
 
   static FirebaseAuth get instance {
@@ -22,22 +22,21 @@ class FirebaseAuth {
       throw Exception(
           "FirebaseAuth hasn't been initialized. Please call FirebaseAuth.initialize() before using it.");
     }
-    return _instance;
+    return _instance!;
   }
 
   /* Instance interface */
   final String apiKey;
 
-  http.Client httpClient;
-  TokenProvider tokenProvider;
+  late http.Client httpClient;
+  late final TokenProvider tokenProvider;
 
-  AuthGateway _authGateway;
-  UserGateway _userGateway;
+  late final AuthGateway _authGateway;
+  late final UserGateway _userGateway;
 
-  FirebaseAuth(this.apiKey, TokenStore tokenStore, {this.httpClient})
-      : assert(apiKey.isNotEmpty),
-        assert(tokenStore != null) {
-    httpClient ??= http.Client();
+  FirebaseAuth(this.apiKey, TokenStore tokenStore, {http.Client? client})
+      : assert(apiKey.isNotEmpty) {
+    httpClient = client ?? http.Client();
     var keyClient = KeyClient(httpClient, apiKey);
     tokenProvider = TokenProvider(keyClient, tokenStore);
 
@@ -49,7 +48,7 @@ class FirebaseAuth {
 
   Stream<bool> get signInState => tokenProvider.signInState;
 
-  String get userId => tokenProvider.userId;
+  String? get userId => tokenProvider.userId;
 
   Future<User> signUp(String email, String password) =>
       _authGateway.signUp(email, password);
@@ -71,7 +70,7 @@ class FirebaseAuth {
 
   Future<User> getUser() => _userGateway.getUser();
 
-  Future<void> updateProfile({String displayName, String photoUrl}) =>
+  Future<void> updateProfile({String? displayName, String? photoUrl}) =>
       _userGateway.updateProfile(displayName, photoUrl);
 
   Future<void> deleteAccount() async {

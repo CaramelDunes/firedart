@@ -12,15 +12,15 @@ class TokenProvider {
   final KeyClient client;
   final TokenStore _tokenStore;
 
-  StreamController<bool> _signInStateStreamController;
+  late final StreamController<bool> _signInStateStreamController;
 
   TokenProvider(this.client, this._tokenStore) {
     _signInStateStreamController = StreamController<bool>();
   }
 
-  String get userId => _tokenStore.userId;
+  String? get userId => _tokenStore.userId;
 
-  String get refreshToken => _tokenStore.refreshToken;
+  String? get refreshToken => _tokenStore.refreshToken;
 
   bool get isSignedIn => _tokenStore.hasToken;
 
@@ -29,12 +29,12 @@ class TokenProvider {
   Future<String> get idToken async {
     if (!isSignedIn) throw SignedOutException();
 
-    if (_tokenStore.expiry
+    if (_tokenStore.expiry!
         .subtract(_tokenExpirationThreshold)
         .isBefore(DateTime.now().toUtc())) {
       await _refresh();
     }
-    return _tokenStore.idToken;
+    return _tokenStore.idToken!;
   }
 
   void setToken(Map<String, dynamic> map) {
@@ -54,7 +54,7 @@ class TokenProvider {
 
   Future _refresh() async {
     var response = await client.post(
-      'https://securetoken.googleapis.com/v1/token',
+      Uri.parse('https://securetoken.googleapis.com/v1/token'),
       body: {
         'grant_type': 'refresh_token',
         'refresh_token': _tokenStore.refreshToken,
@@ -74,7 +74,6 @@ class TokenProvider {
       case 400:
         signOut();
         throw AuthException(response.body);
-        break;
     }
   }
 
